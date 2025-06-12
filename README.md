@@ -10,6 +10,11 @@ An intelligent chatbot built using **Rasa** to answer frequently asked questions
 An AI-powered chatbot to answer frequently asked questions about internships.
  
  ---
+## UI preview
+
+![Screenshot 2025-06-12 195604](https://github.com/user-attachments/assets/fb91123e-68c3-4e31-8443-ec1c0a380f16)
+
+![Screenshot 2025-06-12 195637](https://github.com/user-attachments/assets/a130a091-2a75-4f7a-a1e6-a63cd39e7c6d)
 
 ## 📝 Features
 
