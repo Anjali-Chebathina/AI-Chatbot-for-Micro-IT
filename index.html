@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI FAQ Chatbot - Internship Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chatbot-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #2d5aa0 0%, #4a90e2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.bot {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #4a90e2, #2d5aa0);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #4a90e2, #2d5aa0);
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-reply {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-reply:hover {
+            background: #1976d2;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-field:focus {
+            border-color: #4a90e2;
+        }
+
+        .send-button {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #4a90e2, #2d5aa0);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            margin-left: 42px;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .feedback-section {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .feedback-button {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 4px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .feedback-button:hover {
+            background: #f0f0f0;
+        }
+
+        .feedback-button.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="chat-header">
+            <div class="status-indicator"></div>
+            <h1>🎓 Internship Support Bot</h1>
+            <p>Your 24/7 assistant for internship information</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be populated here -->
+        </div>
+        
+        <div class="chat-input">
+            <div class="input-container">
+                <input type="text" id="messageInput" class="input-field" placeholder="Ask me about internships, applications, deadlines..." maxlength="500">
+                <button id="sendButton" class="send-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class InternshipChatbot {
+            constructor() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                
+                this.conversationHistory = [];
+                this.userSatisfactionData = [];
+                
+                this.initializeBot();
+                this.setupEventListeners();
+                this.loadFAQData();
+            }
+
+            initializeBot() {
+                this.addBotMessage(
+                    "👋 Hello! I'm your AI assistant for internship information. I can help you with:",
+                    [
+                        "Internship eligibility requirements",
+                        "Application process & deadlines", 
+                        "Organization details",
+                        "Contact information",
+                        "General internship queries"
+                    ]
+                );
+            }
+
+            loadFAQData() {
+                // Comprehensive FAQ dataset organized by intents
+                this.faqData = {
+                    'ask_internship_eligibility': {
+                        keywords: ['eligibility', 'eligible', 'requirements', 'qualify', 'criteria', 'minimum'],
+                        responses: [
+                            "📋 **Internship Eligibility Requirements:**\n\n• Currently enrolled in undergraduate/graduate program\n• Minimum GPA of 3.0 (may vary by program)\n• Relevant coursework in your field of interest\n• Strong communication skills\n• Commitment to complete full internship duration\n\nWould you like specific eligibility details for a particular program?"
+                        ]
+                    },
+                    'ask_application_deadline': {
+                        keywords: ['deadline', 'apply', 'application', 'when', 'last date', 'submit', 'due date'],
+                        responses: [
+                            "📅 **Application Deadlines:**\n\n• **Summer Internships:** March 15th\n• **Fall Internships:** July 1st  \n• **Winter Internships:** October 15th\n• **Spring Internships:** December 1st\n\n⚡ Early applications are encouraged! Some popular programs fill up quickly.\n\nNeed help with the application process?"
+                        ]
+                    },
+                    'ask_application_process': {
+                        keywords: ['how to apply', 'application process', 'steps', 'procedure', 'apply'],
+                        responses: [
+                            "📝 **Application Process:**\n\n1. **Create Account** on our internship portal\n2. **Complete Profile** with academic/work details\n3. **Upload Documents** (Resume, Cover Letter, Transcripts)\n4. **Select Programs** you're interested in\n5. **Submit Application** before deadline\n6. **Interview Process** (if shortlisted)\n7. **Final Selection** and onboarding\n\nWould you like detailed guidance on any specific step?"
+                        ]
+                    },
+                    'ask_organization_overview': {
+                        keywords: ['company', 'organization', 'about', 'overview', 'what do you do', 'business'],
+                        responses: [
+                            "🏢 **About Our Organization:**\n\nWe're a leading technology company focused on innovation and growth. Our internship program offers:\n\n• **Real Project Experience** - Work on meaningful projects\n• **Mentorship Program** - Dedicated senior mentor\n• **Skill Development** - Technical & soft skills training\n• **Networking Opportunities** - Connect with industry professionals\n• **Potential Full-time Offers** - High conversion rate\n\nInterested in learning about specific departments?"
+                        ]
+                    },
+                    'ask_contact_info': {
+                        keywords: ['contact', 'email', 'phone', 'reach', 'support', 'help'],
+                        responses: [
+                            "📞 **Contact Information:**\n\n• **Email:** internships@company.com\n• **Phone:** +1 (555) 123-4567\n• **Office Hours:** Mon-Fri, 9 AM - 6 PM EST\n• **Address:** 123 Innovation Drive, Tech City, TC 12345\n\n💬 **Online Support:**\n• Live Chat: Available on our website\n• FAQ Portal: help.company.com\n• Social Media: @CompanyInternships\n\nI'm also here 24/7 to help with your questions!"
+                        ]
+                    },
+                    'ask_internship_types': {
+                        keywords: ['types', 'programs', 'departments', 'roles', 'positions', 'what kind'],
+                        responses: [
+                            "💼 **Available Internship Programs:**\n\n🔧 **Technical:**\n• Software Development\n• Data Science & Analytics\n• Cybersecurity\n• DevOps & Cloud\n\n📊 **Business:**\n• Marketing & Digital\n• Human Resources\n• Finance & Accounting\n• Business Development\n\n🎨 **Creative:**\n• UI/UX Design\n• Content Creation\n• Video Production\n\nWhich area interests you most?"
+                        ]
+                    },
+                    'ask_duration_stipend': {
+                        keywords: ['duration', 'length', 'stipend', 'salary', 'pay', 'compensation', 'how long'],
+                        responses: [
+                            "⏱️ **Duration & Compensation:**\n\n**Duration Options:**\n• 3 months (Standard)\n• 6 months (Extended)\n• 12 months (Co-op program)\n\n💰 **Stipend Information:**\n• Technical roles: $2,000-3,500/month\n• Business roles: $1,800-2,800/month\n• Creative roles: $1,500-2,500/month\n\n**Additional Benefits:**\n• Lunch allowance\n• Transportation reimbursement\n• Learning & development budget\n\nWant to know more about a specific program?"
+                        ]
+                    },
+                    'ask_remote_onsite': {
+                        keywords: ['remote', 'work from home', 'onsite', 'location', 'hybrid', 'office'],
+                        responses: [
+                            "🏠 **Work Arrangements:**\n\n**We offer flexible options:**\n• **On-site:** Full-time office presence\n• **Hybrid:** 3 days office, 2 days remote\n• **Remote:** Work from anywhere (limited positions)\n\n**Remote eligibility depends on:**\n• Role requirements\n• Team collaboration needs\n• Your location & time zone\n\nMost interns start with hybrid arrangement. Would you like to know about specific role arrangements?"
+                        ]
+                    }
+                };
+            }
+
+            setupEventListeners() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                this.messageInput.addEventListener('input', () => {
+                    this.sendButton.disabled = this.messageInput.value.trim() === '';
+                });
+            }
+
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+
+                this.addUserMessage(message);
+                this.messageInput.value = '';
+                this.sendButton.disabled = true;
+                
+                this.showTypingIndicator();
+                
+                // Simulate processing delay for better UX
+                setTimeout(() => {
+                    this.hideTypingIndicator();
+                    this.processMessage(message);
+                }, 1000 + Math.random() * 1000);
+            }
+
+            addUserMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message user';
+                messageDiv.innerHTML = `
+                    <div class="message-content">${this.escapeHtml(message)}</div>
+                `;
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                this.conversationHistory.push({
+                    type: 'user',
+                    message: message,
+                    timestamp: new Date()
+                });
+            }
+
+            addBotMessage(message, quickReplies = null, showFeedback = true) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                
+                let quickReplyHtml = '';
+                if (quickReplies && quickReplies.length > 0) {
+                    quickReplyHtml = `
+                        <div class="quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<div class="quick-reply" onclick="chatbot.handleQuickReply('${this.escapeHtml(reply)}')">${reply}</div>`
+                            ).join('')}
+                        </div>
+                    `;
+                }
+
+                let feedbackHtml = '';
+                if (showFeedback) {
+                    const messageId = Date.now() + Math.random();
+                    feedbackHtml = `
+                        <div class="feedback-section">
+                            <span>Was this helpful?</span>
+                            <button class="feedback-button" onclick="chatbot.handleFeedback(${messageId}, 'positive')">👍</button>
+                            <button class="feedback-button" onclick="chatbot.handleFeedback(${messageId}, 'negative')">👎</button>
+                        </div>
+                    `;
+                }
+                
+                messageDiv.innerHTML = `
+                    <div class="bot-avatar">AI</div>
+                    <div class="message-content">
+                        ${this.formatMessage(message)}
+                        ${quickReplyHtml}
+                        ${feedbackHtml}
+                    </div>
+                `;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                this.conversationHistory.push({
+                    type: 'bot',
+                    message: message,
+                    timestamp: new Date()
+                });
+            }
+
+            handleQuickReply(reply) {
+                this.messageInput.value = reply;
+                this.sendMessage();
+            }
+
+            handleFeedback(messageId, type) {
+                const buttons = document.querySelectorAll(`[onclick*="${messageId}"]`);
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent === (type === 'positive' ? '👍' : '👎')) {
+                        btn.classList.add('active');
+                    }
+                });
+
+                this.userSatisfactionData.push({
+                    messageId: messageId,
+                    feedback: type,
+                    timestamp: new Date()
+                });
+
+                // Show thank you message briefly
+                if (type === 'negative') {
+                    setTimeout(() => {
+                        this.addBotMessage(
+                            "Thank you for your feedback! I'm constantly learning. You can also contact our support team at internships@company.com for additional assistance.",
+                            null,
+                            false
+                        );
+                    }, 500);
+                }
+            }
+
+            processMessage(userMessage) {
+                const intent = this.detectIntent(userMessage);
+                const response = this.generateResponse(intent, userMessage);
+                
+                if (response.quickReplies) {
+                    this.addBotMessage(response.message, response.quickReplies);
+                } else {
+                    this.addBotMessage(response.message);
+                }
+            }
+
+            detectIntent(message) {
+                const lowerMessage = message.toLowerCase();
+                let bestMatch = { intent: 'unknown', confidence: 0 };
+
+                for (const [intent, data] of Object.entries(this.faqData)) {
+                    let matchScore = 0;
+                    
+                    data.keywords.forEach(keyword => {
+                        if (lowerMessage.includes(keyword.toLowerCase())) {
+                            matchScore += keyword.length; // Longer keywords get higher weight
+                        }
+                    });
+                    
+                    const confidence = matchScore / lowerMessage.length;
+                    if (confidence > bestMatch.confidence) {
+                        bestMatch = { intent, confidence };
+                    }
+                }
+
+                return bestMatch.confidence > 0.1 ? bestMatch.intent : 'unknown';
+            }
+
+            generateResponse(intent, userMessage) {
+                if (intent === 'unknown') {
+                    return {
+                        message: "🤔 I'm not sure I understood your question completely. Here are some topics I can help you with:",
+                        quickReplies: [
+                            "Internship eligibility",
+                            "Application deadlines", 
+                            "Application process",
+                            "Organization overview",
+                            "Contact information"
+                        ]
+                    };
+                }
+
+                const intentData = this.faqData[intent];
+                const response = intentData.responses[Math.floor(Math.random() * intentData.responses.length)];
+                
+                // Add contextual quick replies based on intent
+                let quickReplies = null;
+                if (intent === 'ask_internship_eligibility') {
+                    quickReplies = ["Application process", "Available programs", "Contact support"];
+                } else if (intent === 'ask_application_deadline') {
+                    quickReplies = ["How to apply", "Required documents", "Interview process"];
+                } else if (intent === 'ask_organization_overview') {
+                    quickReplies = ["Available programs", "Compensation details", "Work arrangements"];
+                }
+
+                return { message: response, quickReplies };
+            }
+
+            showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message bot';
+                typingDiv.id = 'typing-indicator';
+                typingDiv.innerHTML = `
+                    <div class="bot-avatar">AI</div>
+                    <div class="typing-indicator">
+                        <div class="typing-dots">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                `;
+                this.chatMessages.appendChild(typingDiv);
+                this.scrollToBottom();
+            }
+
+            hideTypingIndicator() {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+
+            formatMessage(message) {
+                // Convert markdown-style formatting to HTML
+                return message
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            // Analytics methods for tracking performance
+            getAnalytics() {
+                const totalMessages = this.conversationHistory.length;
+                const userMessages = this.conversationHistory.filter(msg => msg.type === 'user').length;
+                const botMessages = this.conversationHistory.filter(msg => msg.type === 'bot').length;
+                
+                const feedbackData = this.userSatisfactionData;
+                const positiveFeedback = feedbackData.filter(f => f.feedback === 'positive').length;
+                const negativeFeedback = feedbackData.filter(f => f.feedback === 'negative').length;
+                
+                const satisfactionRate = feedbackData.length > 0 ? 
+                    (positiveFeedback / feedbackData.length) * 100 : 0;
+
+                return {
+                    totalMessages,
+                    userMessages,
+                    botMessages,
+                    satisfactionRate: satisfactionRate.toFixed(1) + '%',
+                    totalFeedback: feedbackData.length,
+                    positiveFeedback,
+                    negativeFeedback
+                };
+            }
+        }
+
+        // Initialize the chatbot
+        const chatbot = new InternshipChatbot();
+
+        // Make chatbot accessible globally for quick reply handlers
+        window.chatbot = chatbot;
+
+        // Optional: Log analytics every 5 minutes for monitoring
+        setInterval(() => {
+            const analytics = chatbot.getAnalytics();
+            console.log('Chatbot Analytics:', analytics);
+        }, 300000);
+    </script>
+</body>
+</html>
