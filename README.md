@@ -1,12 +1,15 @@
 # AI-Chatbot-for-Micro-IT
-An AI-powered chatbot to answer frequently asked questions about internships.
+
 # 🤖 AI FAQ Chatbot for Internship Queries
 
 **Made with ❤️ to Micro IT Services (MITS)**
+## 🎯 Overview
 
 An intelligent chatbot built using **Rasa** to answer frequently asked questions about **internships**, **application processes**, **organization details**, and more. This project aims to automate responses to common queries and enhance the user support experience.
 
----
+An AI-powered chatbot to answer frequently asked questions about internships.
+ 
+ ---
 
 ## 📝 Features
 
